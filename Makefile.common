@@ -6,7 +6,7 @@ BUILD_BASE = .objs
 FW_BASE    = .firmwares
 
 # change this, with your configuration
-COMPILE_ROOT ?= ${HOME}/esp-open-sdk/xtensa-lx106-elf/bin
+COMPILE_ROOT ?= ${ESP_HOME}/esp-open-sdk/xtensa-lx106-elf/bin
 
 # fota setting
 FOTA_PROFILE ?= DEMO
@@ -16,16 +16,16 @@ FOTA_CONFIGFILE ?= ${HOME}/.fotaclient-config.json
 FLASH_SIZE ?= 4096
 
 # base directory of the ESP8266 SDK package, absolute
-SDK_BASE   = ${ROOT}/esp-sdk
+SDK_BASE   = ${ESP_HOME}/esp8266-dev
 # ssptool.py path and port
 ESPPORT    ?= /dev/ttyUSB0
-ESPTOOL    = $(ROOT)/tools/esptool/esptool.py
+ESPTOOL    = $(SDK_BASE)/tools/esptool/esptool.py
 # script to gen bin
-GEN_APPBIN = $(ROOT)/esp-sdk/tools/gen_appbin.py
+GEN_APPBIN = $(SDK_BASE)/esp-sdk/tools/gen_appbin.py
 
 # script to upload firmware for OTA
 ##FOTA_CLIENT = $(ROOT)/tools/fotaclient/fota-client.js
-FOTA_CLIENT = $(ROOT)/work/espupload.php
+FOTA_CLIENT = $(SDK_BASE)/work/espupload.php
 
 # name for the target project
 TARGET    ?= app
@@ -170,8 +170,8 @@ endif
 ####
 SRC_DIR   += $(MODULES) $(DEVS) $(APP_DIR)
 
-SDK_LIBDIR  := $(addprefix $(SDK_BASE)/,$(SDK_LIBDIR))
-SDK_INCDIR  := $(addprefix -I$(SDK_BASE)/,$(SDK_INCDIR))
+SDK_LIBDIR  := $(addprefix $(SDK_BASE)/esp-sdk/,$(SDK_LIBDIR))
+SDK_INCDIR  := $(addprefix -I$(SDK_BASE)/esp-sdk/,$(SDK_INCDIR))
 
 SRC_FILE  := ${foreach sdir, $(SRC_DIR), ${subst ${sdir}/,,${wildcard $(sdir)/*.c}}}
 OBJ_FILE  := $(patsubst %.c,$(BUILD_BASE)/%.o,$(SRC_FILE))
@@ -179,7 +179,7 @@ LIBS      := $(addprefix -l,$(LIBS))
 APP_AR    := $(addprefix $(BUILD_BASE)/,$(TARGET)_app.a)
 TARGET_OUT:= $(addprefix $(BUILD_BASE)/,$(TARGET).out)
 
-LD_SCRIPT := $(addprefix -T$(SDK_BASE)/$(SDK_LDDIR)/,$(LD_SCRIPT))
+LD_SCRIPT := $(addprefix -T$(SDK_BASE)/esp-sdk/$(SDK_LDDIR)/,$(LD_SCRIPT))
 
 INCDIR    := $(addprefix -I,$(SRC_DIR))
 
@@ -244,21 +244,21 @@ $(FW_BASE):
 flash:
 ifeq ($(FLASH_SIZE), 512)
 ifeq ($(OTA), 0)
-	-$(ESPTOOL) --port $(ESPPORT) write_flash 0x00000 $(BIN_NAME_1) 0x40000 $(BIN_NAME_2) 0x7C000 $(ROOT)/esp-sdk/bin/esp_init_data_default.bin 0x7E000 $(ROOT)/esp-sdk/bin/blank.bin
+	-$(ESPTOOL) --port $(ESPPORT) write_flash 0x00000 $(BIN_NAME_1) 0x40000 $(BIN_NAME_2) 0x7C000 $(SDK_BASE)/esp-sdk/bin/esp_init_data_default.bin 0x7E000 $(SDK_BASE)/esp-sdk/bin/blank.bin
 else ifeq ($(OTA), 1)
-	-$(ESPTOOL) --port $(ESPPORT) write_flash 0x00000 $(ROOT)/esp-sdk/bin/$(BOOTBIN) $(IMAGE_ADDRESS) $(BIN_NAME_OTA) 0x7C000 $(ROOT)/esp-sdk/bin/esp_init_data_default.bin 0x7E000 $(ROOT)/esp-sdk/bin/blank.bin
+	-$(ESPTOOL) --port $(ESPPORT) write_flash 0x00000 $(SDK_BASE)/esp-sdk/bin/$(BOOTBIN) $(IMAGE_ADDRESS) $(BIN_NAME_OTA) 0x7C000 $(SDK_BASE)/esp-sdk/bin/esp_init_data_default.bin 0x7E000 $(SDK_BASE)/esp-sdk/bin/blank.bin
 endif
 else ifeq ($(FLASH_SIZE), 1024)
 ifeq ($(OTA), 0)
-	-$(ESPTOOL) --port $(ESPPORT) write_flash 0x00000 $(BIN_NAME_1) 0x80000 $(BIN_NAME_2) 0xFC000 $(ROOT)/esp-sdk/bin/esp_init_data_default.bin 0xFE000 $(ROOT)/esp-sdk/bin/blank.bin
+	-$(ESPTOOL) --port $(ESPPORT) write_flash 0x00000 $(BIN_NAME_1) 0x80000 $(BIN_NAME_2) 0xFC000 $(SDK_BASE)/esp-sdk/bin/esp_init_data_default.bin 0xFE000 $(SDK_BASE)/esp-sdk/bin/blank.bin
 else ifeq ($(OTA), 1)
-	-$(ESPTOOL) --port $(ESPPORT) write_flash -fs 8m 0x00000 $(ROOT)/esp-sdk/bin/$(BOOTBIN) $(IMAGE_ADDRESS) $(BIN_NAME_OTA) 0xFC000 $(ROOT)/esp-sdk/bin/esp_init_data_default.bin 0xFE000 $(ROOT)/esp-sdk/bin/blank.bin
+	-$(ESPTOOL) --port $(ESPPORT) write_flash -fs 8m 0x00000 $(SDK_BASE)/esp-sdk/bin/$(BOOTBIN) $(IMAGE_ADDRESS) $(BIN_NAME_OTA) 0xFC000 $(SDK_BASE)/esp-sdk/bin/esp_init_data_default.bin 0xFE000 $(SDK_BASE)/esp-sdk/bin/blank.bin
 endif
 else ifeq ($(FLASH_SIZE), 4096)
 ifeq ($(OTA), 0)
-	-$(ESPTOOL) --port $(ESPPORT) write_flash 0x00000 $(BIN_NAME_1) 0x80000 $(BIN_NAME_2) 0xFC000 $(ROOT)/esp-sdk/bin/esp_init_data_default.bin 0xFE000 $(ROOT)/esp-sdk/bin/blank.bin
+	-$(ESPTOOL) --port $(ESPPORT) write_flash 0x00000 $(BIN_NAME_1) 0x80000 $(BIN_NAME_2) 0xFC000 $(SDK_BASE)/esp-sdk/bin/esp_init_data_default.bin 0xFE000 $(SDK_BASE)/esp-sdk/bin/blank.bin
 else ifeq ($(OTA), 1)
-	-$(ESPTOOL) --port $(ESPPORT) write_flash -fs 32m-c1 0x00000 $(ROOT)/esp-sdk/bin/$(BOOTBIN) $(IMAGE_ADDRESS) $(BIN_NAME_OTA) 0x3FC000 $(ROOT)/esp-sdk/bin/esp_init_data_default.bin 0x3FE000 $(ROOT)/esp-sdk/bin/blank.bin
+	-$(ESPTOOL) --port $(ESPPORT) write_flash -fs 32m-c1 0x00000 $(SDK_BASE)/esp-sdk/bin/$(BOOTBIN) $(IMAGE_ADDRESS) $(BIN_NAME_OTA) 0x3FC000 $(SDK_BASE)/esp-sdk/bin/esp_init_data_default.bin 0x3FE000 $(SDK_BASE)/esp-sdk/bin/blank.bin
 endif
 endif
 	# ${ROOT}/tools/serialdump-linux -b115200 ${ESPPORT}

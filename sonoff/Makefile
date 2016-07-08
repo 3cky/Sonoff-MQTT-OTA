@@ -6,5 +6,5 @@ FLASH_SIZE = 1024
 MODULES += modules modules/mqtt
 LIBS += smartconfig upgrade ssl
 
-ROOT = ../..
+ROOT = ..
 include ${ROOT}/Makefile.common
